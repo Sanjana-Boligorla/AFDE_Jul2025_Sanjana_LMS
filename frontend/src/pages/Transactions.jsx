@@ -94,7 +94,7 @@ export default function Transactions() {
       : null
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 page-fade-in">
       {/* Header stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card p-4 flex items-center gap-4 border-l-4 border-slate-400">
@@ -182,7 +182,7 @@ export default function Transactions() {
                   return (
                     <tr
                       key={t.transaction_id}
-                      className="hover:bg-slate-50/80 transition-colors"
+                      className="hover:bg-indigo-50/20 transition-colors"
                     >
                       <td className="table-cell text-slate-400 text-xs">
                         {idx + 1}

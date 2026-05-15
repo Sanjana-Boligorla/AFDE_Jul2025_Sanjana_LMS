@@ -229,7 +229,7 @@ export default function Books() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 page-fade-in">
       {/* Page header */}
       <div className="card p-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -289,7 +289,7 @@ export default function Books() {
                 {filtered.map((book, idx) => (
                   <tr
                     key={book.book_id}
-                    className="hover:bg-slate-50/80 transition-colors group"
+                    className="hover:bg-indigo-50/20 transition-colors group"
                   >
                     <td className="table-cell text-slate-400 text-xs">{idx + 1}</td>
                     <td className="table-cell font-semibold text-slate-800 max-w-[200px]">

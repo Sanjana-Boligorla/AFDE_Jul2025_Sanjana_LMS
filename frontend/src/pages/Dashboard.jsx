@@ -1,98 +1,100 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  BookOpen, BookCheck, BookX, Users,
-  ArrowRight, ArrowLeftRight, TrendingUp,
-} from 'lucide-react'
+import { BookOpen, BookCheck, BookX, Users, ArrowRight, ArrowLeftRight, TrendingUp } from 'lucide-react'
 import { getDashboardStats, getTransactions } from '../services/api'
 import StatusBadge from '../components/StatusBadge'
-import LoadingSpinner from '../components/LoadingSpinner'
 
-// ── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ icon: Icon, label, value, color, bgColor, iconBg, linkTo, linkLabel }) {
+function Skeleton({ className = '' }) {
+  return <div className={`animate-pulse bg-slate-100 rounded-lg ${className}`} />
+}
+
+function StatCard({ icon: Icon, label, value, borderColor, iconBg, iconColor, linkTo, linkLabel }) {
   return (
-    <div className={`card p-5 border-l-4 ${color}`}>
+    <div className={`bg-white rounded-2xl border border-slate-200 border-l-4 ${borderColor} shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5`}>
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-            {label}
+        <div className="flex-1">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{label}</p>
+          <p className="text-4xl font-bold text-slate-800 tracking-tight">
+            {value ?? <Skeleton className="h-9 w-16 mt-1" />}
           </p>
-          <p className="text-3xl font-bold text-slate-800">{value ?? '—'}</p>
           {linkTo && (
-            <Link
-              to={linkTo}
-              className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-indigo-600 hover:text-indigo-700"
-            >
+            <Link to={linkTo} className={`inline-flex items-center gap-1 mt-3 text-xs font-semibold ${iconColor} hover:gap-2 transition-all duration-150`}>
               {linkLabel} <ArrowRight size={12} />
             </Link>
           )}
         </div>
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${iconBg}`}>
-          <Icon size={22} className={`${bgColor}`} />
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
+          <Icon size={22} className={iconColor} />
         </div>
       </div>
     </div>
   )
 }
 
-// ── Recent Transactions table ─────────────────────────────────────────────────
-function RecentTransactions({ transactions, loading }) {
-  if (loading) return <LoadingSpinner message="Loading transactions..." />
+function QuickAction({ to, icon: Icon, title, subtitle, iconBg, iconColor }) {
+  return (
+    <Link to={to} className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg} group-hover:scale-110 transition-transform duration-200`}>
+        <Icon size={19} className={iconColor} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-slate-800">{title}</p>
+        <p className="text-xs text-slate-500">{subtitle}</p>
+      </div>
+      <ArrowRight size={15} className="ml-auto shrink-0 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all" />
+    </Link>
+  )
+}
 
-  if (!transactions.length) {
+function RecentTransactions({ transactions, loading }) {
+  if (loading) {
     return (
-      <div className="text-center py-14 text-slate-400">
-        <ArrowLeftRight size={36} className="mx-auto mb-3 opacity-40" />
-        <p className="text-sm">No transactions yet.</p>
+      <div className="divide-y divide-slate-100">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="flex items-center gap-4 px-5 py-4">
+            <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-2"><Skeleton className="h-3 w-2/5" /><Skeleton className="h-3 w-1/4" /></div>
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </div>
+        ))}
       </div>
     )
   }
-
+  if (!transactions.length) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
+          <ArrowLeftRight size={24} className="text-slate-400" />
+        </div>
+        <p className="text-sm font-medium text-slate-600 mb-1">No transactions yet</p>
+        <p className="text-xs text-slate-400 mb-4">Borrow a book to see activity here.</p>
+        <Link to="/borrow-return" className="btn-primary text-xs px-4 py-2">Record First Borrow</Link>
+      </div>
+    )
+  }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-slate-200 bg-slate-50/60">
-            <th className="table-header rounded-tl-lg">Book</th>
-            <th className="table-header">Borrower</th>
-            <th className="table-header">Borrow Date</th>
-            <th className="table-header">Return Date</th>
-            <th className="table-header rounded-tr-lg">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {transactions.map((t) => (
-            <tr key={t.transaction_id} className="hover:bg-slate-50/70 transition-colors">
-              <td className="table-cell font-medium text-slate-800">
-                {t.book_title ?? '—'}
-              </td>
-              <td className="table-cell">{t.borrower_name ?? '—'}</td>
-              <td className="table-cell text-slate-500">
-                {t.borrow_date
-                  ? new Date(t.borrow_date).toLocaleDateString('en-US', {
-                      month: 'short', day: 'numeric', year: 'numeric',
-                    })
-                  : '—'}
-              </td>
-              <td className="table-cell text-slate-500">
-                {t.return_date
-                  ? new Date(t.return_date).toLocaleDateString('en-US', {
-                      month: 'short', day: 'numeric', year: 'numeric',
-                    })
-                  : <span className="text-slate-400 italic">Pending</span>}
-              </td>
-              <td className="table-cell">
-                <StatusBadge status={t.status} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="divide-y divide-slate-100">
+      {transactions.map((t) => (
+        <div key={t.transaction_id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${t.status === 'Borrowed' ? 'bg-amber-100' : 'bg-emerald-100'}`}>
+            <ArrowLeftRight size={15} className={t.status === 'Borrowed' ? 'text-amber-600' : 'text-emerald-600'} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-slate-800 truncate">{t.book_title ?? '—'}</p>
+            <p className="text-xs text-slate-400 truncate">{t.borrower_name ?? '—'}</p>
+          </div>
+          <div className="text-right shrink-0 space-y-1">
+            <StatusBadge status={t.status} />
+            <p className="text-xs text-slate-400">
+              {new Date(t.borrow_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </p>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
 
-// ── Page ───────────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [stats, setStats]               = useState(null)
   const [transactions, setTransactions] = useState([])
@@ -100,124 +102,62 @@ export default function Dashboard() {
   const [txLoading, setTxLoading]       = useState(true)
 
   useEffect(() => {
-    getDashboardStats()
-      .then((res) => setStats(res.data))
-      .catch(console.error)
-      .finally(() => setStatsLoading(false))
-
-    getTransactions()
-      .then((res) => setTransactions(res.data.slice(0, 8)))
-      .catch(console.error)
-      .finally(() => setTxLoading(false))
+    getDashboardStats().then((r) => setStats(r.data)).catch(console.error).finally(() => setStatsLoading(false))
+    getTransactions().then((r) => setTransactions(r.data.slice(0, 3))).catch(console.error).finally(() => setTxLoading(false))
   }, [])
 
   const statCards = [
-    {
-      icon: BookOpen, label: 'Total Books',
-      value: stats?.total_books,
-      color: 'border-blue-500',
-      iconBg: 'bg-blue-100', bgColor: 'text-blue-600',
-      linkTo: '/books', linkLabel: 'View all books',
-    },
-    {
-      icon: BookCheck, label: 'Available Books',
-      value: stats?.available_books,
-      color: 'border-emerald-500',
-      iconBg: 'bg-emerald-100', bgColor: 'text-emerald-600',
-    },
-    {
-      icon: BookX, label: 'Borrowed Books',
-      value: stats?.borrowed_books,
-      color: 'border-amber-500',
-      iconBg: 'bg-amber-100', bgColor: 'text-amber-600',
-      linkTo: '/borrow-return', linkLabel: 'Manage borrows',
-    },
-    {
-      icon: Users, label: 'Registered Borrowers',
-      value: stats?.total_borrowers,
-      color: 'border-purple-500',
-      iconBg: 'bg-purple-100', bgColor: 'text-purple-600',
-      linkTo: '/borrowers', linkLabel: 'View borrowers',
-    },
+    { icon: BookOpen,  label: 'Total Books',           value: stats?.total_books,      borderColor: 'border-l-blue-500',   iconBg: 'bg-blue-50',   iconColor: 'text-blue-600',   linkTo: '/books',         linkLabel: 'View all books'   },
+    { icon: BookCheck, label: 'Available Books',        value: stats?.available_books,  borderColor: 'border-l-emerald-500',iconBg: 'bg-emerald-50',iconColor: 'text-emerald-600' },
+    { icon: BookX,     label: 'Borrowed Books',         value: stats?.borrowed_books,   borderColor: 'border-l-amber-500',  iconBg: 'bg-amber-50',  iconColor: 'text-amber-600',  linkTo: '/borrow-return', linkLabel: 'Manage borrows'   },
+    { icon: Users,     label: 'Registered Borrowers',   value: stats?.total_borrowers,  borderColor: 'border-l-purple-500', iconBg: 'bg-purple-50', iconColor: 'text-purple-600', linkTo: '/borrowers',     linkLabel: 'View borrowers'   },
   ]
 
   return (
-    <div className="space-y-6">
-      {/* Stats grid */}
+    <div className="space-y-5 page-fade-in">
       {statsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="card p-5 h-28 animate-pulse bg-slate-100" />
+            <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5">
+              <div className="flex justify-between items-start mb-4"><Skeleton className="h-3 w-24" /><Skeleton className="w-11 h-11 rounded-xl" /></div>
+              <Skeleton className="h-9 w-16 mb-3" /><Skeleton className="h-3 w-28" />
+            </div>
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {statCards.map((card) => (
-            <StatCard key={card.label} {...card} />
-          ))}
+          {statCards.map((card) => <StatCard key={card.label} {...card} />)}
         </div>
       )}
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link
-          to="/books"
-          className="card p-4 flex items-center gap-4 hover:border-indigo-300 hover:shadow-md transition-all group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-            <BookOpen size={20} className="text-indigo-600" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-3">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Quick Actions</p>
+          <div className="flex flex-col gap-3">
+            <QuickAction to="/books"         icon={BookOpen}       title="Manage Books"      subtitle="Add, edit, or remove books"         iconBg="bg-indigo-50" iconColor="text-indigo-600" />
+            <QuickAction to="/borrowers"     icon={Users}          title="Manage Borrowers"  subtitle="Register and update borrowers"       iconBg="bg-purple-50" iconColor="text-purple-600" />
+            <QuickAction to="/borrow-return" icon={ArrowLeftRight} title="Borrow / Return"   subtitle="Issue books and process returns"     iconBg="bg-amber-50"  iconColor="text-amber-600"  />
           </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-800">Manage Books</p>
-            <p className="text-xs text-slate-500">Add, edit, or remove books</p>
-          </div>
-          <ArrowRight size={16} className="ml-auto text-slate-400 group-hover:text-indigo-600 transition-colors" />
-        </Link>
-
-        <Link
-          to="/borrowers"
-          className="card p-4 flex items-center gap-4 hover:border-indigo-300 hover:shadow-md transition-all group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-            <Users size={20} className="text-purple-600" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-800">Manage Borrowers</p>
-            <p className="text-xs text-slate-500">Register and manage borrowers</p>
-          </div>
-          <ArrowRight size={16} className="ml-auto text-slate-400 group-hover:text-purple-600 transition-colors" />
-        </Link>
-
-        <Link
-          to="/borrow-return"
-          className="card p-4 flex items-center gap-4 hover:border-indigo-300 hover:shadow-md transition-all group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
-            <ArrowLeftRight size={20} className="text-amber-600" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-800">Borrow / Return</p>
-            <p className="text-xs text-slate-500">Record transactions</p>
-          </div>
-          <ArrowRight size={16} className="ml-auto text-slate-400 group-hover:text-amber-600 transition-colors" />
-        </Link>
-      </div>
-
-      {/* Recent transactions */}
-      <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={18} className="text-indigo-600" />
-            <h2 className="text-sm font-semibold text-slate-800">Recent Transactions</h2>
-          </div>
-          <Link
-            to="/transactions"
-            className="text-xs font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
-          >
-            View all <ArrowRight size={12} />
-          </Link>
         </div>
-        <RecentTransactions transactions={transactions} loading={txLoading} />
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <TrendingUp size={15} className="text-indigo-600" />
+              </div>
+              <h2 className="text-sm font-semibold text-slate-800">Recent Transactions</h2>
+            </div>
+            {transactions.length > 0 && (
+              <Link to="/transactions" className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:gap-1.5 transition-all">
+                View all <ArrowRight size={12} />
+              </Link>
+            )}
+          </div>
+          <div className="flex-1">
+            <RecentTransactions transactions={transactions} loading={txLoading} />
+          </div>
+        </div>
       </div>
     </div>
   )

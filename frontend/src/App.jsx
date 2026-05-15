@@ -6,6 +6,7 @@ import Borrowers    from './pages/Borrowers'
 import BorrowReturn from './pages/BorrowReturn'
 import Transactions from './pages/Transactions'
 import Search       from './pages/Search'
+import NotFound     from './pages/NotFound'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/borrow-return" element={<BorrowReturn />} />
         <Route path="/transactions"  element={<Transactions />} />
         <Route path="/search"        element={<Search />}       />
+        <Route path="*"              element={<NotFound />}     />
       </Routes>
     </Layout>
   )

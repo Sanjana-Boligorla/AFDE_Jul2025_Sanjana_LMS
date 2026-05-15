@@ -133,7 +133,7 @@ function ActiveBorrowsTable({ transactions, onReturn, loading }) {
         </thead>
         <tbody className="divide-y divide-slate-100">
           {active.map((t, idx) => (
-            <tr key={t.transaction_id} className="hover:bg-slate-50/80 transition-colors">
+            <tr key={t.transaction_id} className="hover:bg-indigo-50/20 transition-colors">
               <td className="table-cell text-slate-400 text-xs">{idx + 1}</td>
               <td className="table-cell">
                 <p className="font-semibold text-slate-800">{t.book_title ?? '—'}</p>
@@ -245,7 +245,7 @@ export default function BorrowReturn() {
   const totalReturned  = transactions.filter((t) => t.status === 'Returned').length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-fade-in">
       {/* Summary row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card p-4 flex items-center gap-4 border-l-4 border-indigo-500">
