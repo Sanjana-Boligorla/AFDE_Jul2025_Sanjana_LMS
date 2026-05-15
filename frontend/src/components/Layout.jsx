@@ -7,7 +7,7 @@ export default function Layout({ children }) {
       <Sidebar />
       <div className="flex flex-col flex-1 ml-64 min-h-screen">
         <Navbar />
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-6">
           {children}
         </main>
       </div>

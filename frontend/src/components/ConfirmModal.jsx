@@ -1,17 +1,6 @@
+import { createPortal } from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
 
-/**
- * Confirmation dialog for destructive actions (delete, etc.)
- *
- * Props:
- *  isOpen      – boolean
- *  onClose     – () => void
- *  onConfirm   – () => void
- *  title       – string
- *  message     – string
- *  confirmText – string (default 'Delete')
- *  loading     – boolean
- */
 export default function ConfirmModal({
   isOpen,
   onClose,
@@ -23,27 +12,22 @@ export default function ConfirmModal({
 }) {
   if (!isOpen) return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Panel */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-        {/* Icon */}
         <div className="flex justify-center mb-4">
           <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
             <AlertTriangle size={22} className="text-red-600" />
           </div>
         </div>
 
-        {/* Content */}
         <div className="text-center mb-6">
           <h3 className="text-base font-semibold text-slate-800 mb-2">{title}</h3>
           <p className="text-sm text-slate-500">{message}</p>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3">
           <button
             onClick={onClose}
@@ -66,6 +50,7 @@ export default function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
